@@ -1,93 +1,102 @@
-# ENGN4628 Optimisation assignment
+# Mine Haulage Cost Optimisation
+
+This repository contains the code and report for a research project that formulates and solves a network-flow optimisation model to minimise the cost of transporting ore from pits to crushers in an open-pit coal mine. The model introduces a novel "wear-aware throttling" strategy, deliberately slowing trucks on non-critical routes to reduce fuel and maintenance costs without sacrificing overall throughput.
+
+**Key Finding:** By optimising for cost instead of pure speed, the total cost of meeting crusher demand was reduced by **4.92%**.
+
+## Project Overview
+
+In traditional mine haulage optimisation, truck speed is often treated as a fixed parameter. However, there is a significant trade-off: higher speeds reduce cycle times but exponentially increase fuel consumption and mechanical wear. This project challenges the conventional approach by treating speed as a decision variable that directly influences the cost function.
+
+We model the mine's road network as a directed graph where each road segment (arc) has:
+*   A **cost-per-tonne** that is a function of speed, road quality, and distance.
+*   A **mass-flow capacity** that is also a function of speed and road conditions.
+
+The objective is to find the optimal flow of material (tonnes per day) through this network to meet the crushers' demands at the minimum total cost, subject to road capacity constraints.
+
+## Methodology
+
+### 1. Problem Formulation
+The core of the project is a **Linear Programming (LP) minimum-cost network-flow model**.
+*   **Objective Function:** Minimise the total cost of transport.
+    \[
+    \min \sum_{(i,j)\in A} V_{i\rightarrow j} \cdot c_{i\rightarrow j}
+    \]
+*   **Constraints:**
+    *   Flow conservation at all intermediate nodes.
+    *   Supply constraints at mine nodes.
+    *   Demand constraints at crusher nodes.
+    *   Arc capacity constraints based on road properties and speed.
+
+### 2. Cost & Capacity Models
+The innovation lies in the detailed, speed-aware models for cost and capacity.
+
+*   **Cost Function (`c_{i→j}`):** Combines fuel and maintenance costs, each with calibrated elasticities for speed and payload. Faster speeds on a given road lead to super-linear increases in cost.
+    *   **Fuel Exponent (δ):** 1.22
+    *   **Maintenance Exponent (γ):** 1.70
+
+*   **Capacity Function:** Determines the maximum daily tonnage a road can handle, influenced by speed limits, gradient, and road quality (straightness and condition).
+
+### 3. Implementation
+The model is implemented in Python using the **Gurobi** optimiser. The code sets up the network, defines the objective and constraints, and solves for the optimal flow.
+
+### Prerequisites
+*   Python 3.7+
+*   [Gurobi Optimiser](https://www.gurobi.com/) with a valid license.
+*   Python packages: `gurobipy`, `numpy`
+
+### Installation & Usage
+
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/your-username/mine-haulage-optimisation.git
+    cd mine-haulage-optimisation
+    ```
+
+2.  **Install required packages:**
+    ```bash
+    pip install gurobipy numpy
+    ```
+
+3.  **Run the optimisation:**
+    Navigate to the `src` directory and run the script.
+    ```bash
+    cd src
+    python cost_optimisation.py
+    ```
+    The script will output the optimal cost and the mass flow through each road segment.
+
+## 📊 Results
+
+The model was tested on a network based on the Curragh Mine in Queensland's Bowen Basin.
+
+| Optimisation Goal | PERT Estimated Cost |
+| :--- | :--- |
+| **Minimum Cost (Proposed)** | **\$6,659.8** |
+| Minimum Time (Baseline) | \$7,004.2 |
+
+**Result:** The cost-optimised solution **reduced daily costs by 4.92%** compared to the speed-optimised baseline. This was achieved by rerouting traffic away from high-cost, high-speed roads and utilising "throttled" paths where slower speeds led to significant savings in fuel and wear.
+
+## 🔮 Future Work
+
+This model provides a strong foundation for several extensions:
+*   **Discretisation:** Reformulating the problem as a Mixed-Integer Linear Program (MILP) to schedule individual trucks over time.
+*   **Uncertainty Modelling:** Incorporating stochastic elements like truck breakdowns, weather, and fluctuating fuel prices.
+*   **Dynamic Speed Control:** Making speed a direct decision variable in the optimisation for even finer control.
+*   **New Mine Planning:** Using the model to optimise the initial layout of haul roads in new mine sites.
+
+## Report
+
+The full academic report is included in this repository. It provides a comprehensive background, detailed derivation of the models, a complete sensitivity analysis, and a discussion of the results and their industrial implications.
+
+## Authors
+
+*   **Christopher Tsirbas** (u7143682)
+*   **Lachlan Knoke** (u7298351)
+*   **Chithi Gunatilake** (u7637857)
+*   **Joshua Dunn** (u5365782)
+
+This project was completed for **ENGN4628 Optimisation and Control with Uncertainty and Constraints**.
 
 
-
-## Getting started
-
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
-
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
-
-## Add your files
-
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
-
-```
-cd existing_repo
-git remote add origin https://gitlab.cecs.anu.edu.au/u7143682/engn4628-optimisation-assignment.git
-git branch -M main
-git push -uf origin main
-```
-
-## Integrate with your tools
-
-- [ ] [Set up project integrations](https://gitlab.cecs.anu.edu.au/u7143682/engn4628-optimisation-assignment/-/settings/integrations)
-
-## Collaborate with your team
-
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
-
-## Test and Deploy
-
-Use the built-in continuous integration in GitLab.
-
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
-
-***
-
-# Editing this README
-
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
-
-## Suggestions for a good README
-
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
-
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
-
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
-
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+Declaration: Chatgpt was used in this repository
